@@ -9,6 +9,9 @@
 #include <opencv2/opencv.hpp>  
 #include <iostream>
 #include <time.h> 
+#include <fstream>
+#include <sstream>
+#include <string>
 #include <string.h> 
 #include <opencv2\core\core.hpp>
 #include <opencv2\highgui\highgui.hpp>
@@ -113,15 +116,17 @@ BEGIN_MESSAGE_MAP(CMFCApplication4Dlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BUTTON1, &CMFCApplication4Dlg::OnBnClickedOpen)
-	ON_EN_CHANGE(IDC_EDIT5, &CMFCApplication4Dlg::OnEnChangeEdit5)
+	//ON_EN_CHANGE(IDC_EDIT5, &CMFCApplication4Dlg::OnEnChangeEdit5)
 	ON_BN_CLICKED(IDOK, &CMFCApplication4Dlg::OnBnClickedUPDATE)
 	ON_BN_CLICKED(IDC_BUTTON2, &CMFCApplication4Dlg::OnBnClickedUPDATE)
 	ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN1, &CMFCApplication4Dlg::OnDeltaposSpin1)
 	ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN2, &CMFCApplication4Dlg::OnDeltaposSpin2)
 	ON_BN_CLICKED(IDC_RADIO1, &CMFCApplication4Dlg::OnBnClickedRadio1)
 	ON_BN_CLICKED(IDC_RADIO2, &CMFCApplication4Dlg::OnBnClickedRadio1)
-	ON_EN_CHANGE(IDC_EDIT11, &CMFCApplication4Dlg::OnEnChangeEdit11)
+	//ON_EN_CHANGE(IDC_EDIT11, &CMFCApplication4Dlg::OnEnChangeEdit11)
 	ON_BN_CLICKED(IDC_BUTTON3, &CMFCApplication4Dlg::OnBnClickedlog)
+//	ON_WM_TIMECHANGE()
+ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 
@@ -163,6 +168,9 @@ BOOL CMFCApplication4Dlg::OnInitDialog()
 	miny=100;
 	multiratio = 0.2;
 	maxarea = 930000;
+	number = 3;
+	ct = 0;
+	concentration=0;
 	cvNamedWindow("binary", CV_WINDOW_AUTOSIZE);
 	cvNamedWindow("contours", CV_WINDOW_AUTOSIZE);
 	createTrackbar("Max thresh", "binary", &maxthe, 254, NULL);
@@ -170,9 +178,12 @@ BOOL CMFCApplication4Dlg::OnInitDialog()
 	createTrackbar("Min area", "contours", &min_area, 150, on_trackbar);
 	cvSetTrackbarPos("Min area", "contours", 0);
 
+
 	UpdateData(FALSE);
+	
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
+
 
 void CMFCApplication4Dlg::OnSysCommand(UINT nID, LPARAM lParam)
 {
@@ -216,8 +227,7 @@ void CMFCApplication4Dlg::OnPaint()
 	}
 }
 
-//当用户拖动最小化窗口时系统调用此函数取得光标
-//显示。
+
 HCURSOR CMFCApplication4Dlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
@@ -227,6 +237,7 @@ HCURSOR CMFCApplication4Dlg::OnQueryDragIcon()
 
 void CMFCApplication4Dlg::OnBnClickedOpen()
 {
+	KillTimer(1);
 	UpdateData(TRUE);
 //TODO: Add your command handler code here 
 	LPCTSTR lpszFilter = _T("JPGFiles(*.jpg)|*.jpg|All Files(*.*)|*.*||");
@@ -237,7 +248,7 @@ void CMFCApplication4Dlg::OnBnClickedOpen()
 	{
 		filepath = dlg.GetPathName();
 		IplImage *pSrcImage = cvLoadImage(CT2CA(filepath), CV_LOAD_IMAGE_UNCHANGED);
-		FILE *out=fopen("1213.txt", "w");
+		
 		headline = filepath;
 		cvNamedWindow("original", CV_WINDOW_AUTOSIZE);
 		cvShowImage("original", pSrcImage);
@@ -251,25 +262,17 @@ void CMFCApplication4Dlg::OnBnClickedOpen()
 
 
 	UpdateData(FALSE);
+	SetTimer(1, 2000, NULL);
 }
 
 
-void CMFCApplication4Dlg::OnEnChangeEdit5()
-{
-	// TODO:  如果该控件是 RICHEDIT 控件，它将不
-	// 发送此通知，除非重写 CDialogEx::OnInitDialog()
-	// 函数并调用 CRichEditCtrl().SetEventMask()，
-	// 同时将 ENM_CHANGE 标志“或”运算到掩码中。
-
-	// TODO:  在此添加控件通知处理程序代码
-}
 
 
 
 void CMFCApplication4Dlg::OnBnClickedUPDATE()
 {
 	// TODO:  在此添加控件通知处理程序代码
-	 
+	 KillTimer(1);
 	 UpdateData(TRUE);
 	 ct = 0;
      	Mat image;
@@ -281,7 +284,7 @@ void CMFCApplication4Dlg::OnBnClickedUPDATE()
 			if (number >= 3)
 			{
 				int thresh = number % 2 - 1 + number;
-				cvAdaptiveThreshold(g_pGrayImage, pBinaryImage, 255, CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, thresh, maxthe);
+				cvAdaptiveThreshold(g_pGrayImage, pBinaryImage, 255, CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, thresh, -maxthe);
 			}
 		}
 		// 显示二值图  
@@ -348,6 +351,7 @@ void CMFCApplication4Dlg::OnBnClickedUPDATE()
 	imshow("contours", result);
 	concentration = multiratio*ct;
 	UpdateData(FALSE);
+	SetTimer(1, 2000, NULL);
 	
 }
 
@@ -386,42 +390,57 @@ void CMFCApplication4Dlg::OnDeltaposSpin2(NMHDR *pNMHDR, LRESULT *pResult)
 }
 
 
-void CMFCApplication4Dlg::OnBnClickedRadio1()
-{
-	// TODO:  在此添加控件通知处理程序代码
-}
-
 
 
 
 void CMFCApplication4Dlg::OnBnClickedlog()
 {
-	char x[100][100];
-	int y[100];
-	double z[100];
-	int j, n = 0;
-	FILE *fp;
+	UpdateData(TRUE);
+	string data[100];
+	ifstream infile("log.csv");
+	int k = 0;
 	int flag = 1;
-	fp = fopen("log.csv", "r");
-	while (1){
-		fscanf(fp, "%[^\n],%d,%lf",x[n], &y[n], &z[n]);
-		if (feof(fp))break;
-		if (strcmp(x[n], CT2CA(headline)) == 0)
-		{   
-			y[n] = ct;
-			z[n] = concentration;
-			flag = 0;
-		}
-		n++;
-	}
-	fclose(fp);
-	fp = fopen("log.csv", "w");
-	for (j = 0; j<n; j++){
+	while (infile.good())
+	{
+		string s;
+		if (!getline(infile, s)) break;
+
+		istringstream ss(s);
 		
-		fprintf(fp, "%s,%d,%lf\n",x[n],y[n],z[n]);
+		string str;
+		getline(ss, str, ',');
+		
+	
+		if (strcmp(str.c_str(), CT2CA(headline)) == 0)
+		{
+		}
+		else
+		{
+			data[k] = s;
+			k++;
+		}
+
 	}
-	if (flag)
-	{ 
-		fprintf(fp, "%s,%d,%lf\n", CT2CA(headline), ct, concentration);
+	infile.close();
+
+	FILE* fp=fopen("log.csv", "w");
+		//if (ct!=0)
+	for (int i = 0; i < k;i++)
+	{
+		
+		fprintf(fp, "%s\n", data[i].c_str());
 	}
+	fprintf(fp, "%s", CT2CA(headline));
+	fprintf(fp, ",%d,%lf\n", ct, concentration);
+	fclose(fp);
+}
+
+
+void CMFCApplication4Dlg::OnTimer(UINT_PTR nIDEvent)
+{
+	if (nIDEvent == 1)
+		OnBnClickedUPDATE();
+
+	CDialog::OnTimer(nIDEvent);
+
 }

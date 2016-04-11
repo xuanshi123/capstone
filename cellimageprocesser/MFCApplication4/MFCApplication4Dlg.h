@@ -27,6 +27,7 @@ protected:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
+	
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 public:
@@ -47,8 +48,10 @@ public:
 	int minarea;
 	afx_msg void OnDeltaposSpin2(NMHDR *pNMHDR, LRESULT *pResult);
 	int m_radiogroup1;
-	afx_msg void OnBnClickedRadio1();
+	//afx_msg void OnBnClickedRadio1();
 	afx_msg void OnEnChangeEdit11();
 	int number;
 	afx_msg void OnBnClickedlog();
+//	afx_msg void OnTimeChange();
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };

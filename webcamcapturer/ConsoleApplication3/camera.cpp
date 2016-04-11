@@ -14,8 +14,7 @@
 #include <io.h>
 #include <direct.h>
 
-// 这几个依赖库文件必须要添加，
-// 因为这些是OpenCV所使用的第三方库  
+
 #pragma comment( lib, "IlmImf.lib")
 #pragma comment( lib, "libjasper.lib")
 #pragma comment( lib, "libjpeg.lib")
@@ -55,7 +54,11 @@ using namespace cv;
 using namespace cv;
 
 void main()
-{
+{   
+
+    cout << "Select camera 0 for default 1 for plug-in camera" << endl;
+    int Input;
+    cin>>Input;
     cout << "Press r to store RED channel" << endl;
 	cout << "Press b to store BLUE channel" << endl;
 	cout << "Press g to store Green channel" << endl;
@@ -66,7 +69,7 @@ void main()
 	IplImage *imgColor[4] = { 0, 0, 0, 0 };
 	//int cm;
 	//std::cin>>cm;
-	CvCapture* pCapture = cvCreateCameraCapture(1);
+	CvCapture* pCapture = cvCreateCameraCapture(Input);
 	CvSize size = cvSize(1280, 720);
 	cvSetCaptureProperty(pCapture, CV_CAP_PROP_FRAME_WIDTH, size.width);
 	cvSetCaptureProperty(pCapture, CV_CAP_PROP_FRAME_HEIGHT, size.height);
